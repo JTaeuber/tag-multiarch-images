@@ -3,6 +3,10 @@ name: Create multiarch images
 on:
   push:
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   create_images:
     name: create container images

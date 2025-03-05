@@ -2,18 +2,13 @@ module tag-multiarch-images
 
 go 1.24.0
 
-require (
-	github.com/google/go-github/v69 v69.2.0
-	golang.org/x/oauth2 v0.27.0
-)
+require github.com/google/go-containerregistry v0.20.3
 
 require (
 	github.com/containerd/stargz-snapshotter/estargz v0.16.3 // indirect
 	github.com/docker/cli v27.5.0+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.8.2 // indirect
-	github.com/google/go-containerregistry v0.20.3 // indirect
-	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
