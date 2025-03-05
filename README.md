@@ -12,7 +12,7 @@ steps:
     uses: jtaeuber/tag-multiarch-images@v0.1.0
     with:
       gh_token: ${{ secrets.YOUR_TOKEN }}
-      gh_org: your-org
+      gh_user: your-org
       package_name: your-package
       tag: your-tag
 ```
