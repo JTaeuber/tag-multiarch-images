@@ -1,0 +1,21 @@
+name: Test Action
+
+on:
+  workflow_call:
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  test_action:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run Action
+        uses: ./
+        with:
+          package_name: tag-multiarch-images
+          gh_token: ${{ secrets.GITHUB_TOKEN }}

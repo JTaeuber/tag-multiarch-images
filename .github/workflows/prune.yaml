@@ -1,0 +1,23 @@
+name: Prune old test images
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  delete_container:
+    name: delete container
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove container
+        uses: vlaurin/action-ghcr-prune@v0.6.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          container: prune-orphaned-cosign-sig
+          prune-untagged: true
+          prune-tags-regexes: |
+            ^test-
