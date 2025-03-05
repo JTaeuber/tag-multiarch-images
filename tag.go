@@ -132,7 +132,7 @@ func main() {
 		}
 
 		f.WriteString("## Tagged versions\n\n")
-		f.WriteString("| Digest | New Tag |\n|--------------|\n")
+		f.WriteString("| Digest | New Tag |\n|--------------|--------------|\n")
 		f.WriteString(taggedVersions + "\n")
 	} else {
 		f.WriteString("No versions to tag found.")
