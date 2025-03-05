@@ -126,12 +126,12 @@ func main() {
 	}
 	defer f.Close()
 
-	if imgTagged {
-		if dryrun {
-			f.WriteString(":warning: This is a dry run, no versions were actually tagged.\n\n")
-		}
+	f.WriteString("## Tagged versions\n\n")
+	if dryrun {
+		f.WriteString(":warning: This is a dry run, no versions were actually tagged.\n\n")
+	}
 
-		f.WriteString("## Tagged versions\n\n")
+	if imgTagged {
 		f.WriteString("| Digest | New Tag |\n|--------------|--------------|\n")
 		f.WriteString(taggedVersions + "\n")
 	} else {
