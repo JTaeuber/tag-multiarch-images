@@ -21,19 +21,23 @@ type ImageManifestList struct {
 			Architecture string `json:"architecture"`
 			OS           string `json:"os"`
 		} `json:"platform"`
+		Annotations map[string]string `json:"annotations"`
 	} `json:"manifests"`
 }
 
-func getChecksum() {}
-
-func deleteSignature() {}
+func findMatchingDigest(ref string, list ImageManifestList) (string, string) {
+	for _, image := range list.Manifests {
+		if ref == image.Digest {
+			return image.Platform.Architecture, image.Platform.OS
+		}
+	}
+	return "", ""
+}
 
 func main() {
 	ghToken := os.Getenv("GH_TOKEN")
-	ghOrg := os.Getenv("GH_ORG")
 	ghUser := os.Getenv("GH_USER")
 	packageName := os.Getenv("PACKAGE_NAME")
-	packageType := os.Getenv("PACKAGE_TYPE")
 	versionTag := os.Getenv("TAG")
 	dryrun_env := os.Getenv("DRYRUN")
 
@@ -52,19 +56,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	if ghOrg != "" && ghUser != "" {
-		slog.Error("Please only provide either a github user or a github org.")
-		os.Exit(1)
-	}
-
-	username := ""
-
-	if ghOrg != "" {
-		username = ghOrg
-	} else {
-		username = ghUser
-	}
-
 	if dryrun_env == "" {
 		dryrun_env = "false"
 	}
@@ -74,16 +65,12 @@ func main() {
 		slog.Error("Error parsing bool", "Error", err)
 	}
 
-	if packageType == "" {
-		packageType = "container"
-	}
-
 	auth := authn.FromConfig(authn.AuthConfig{
-		Username: username,
+		Username: ghUser,
 		Password: ghToken,
 	})
 
-	packageURL := fmt.Sprintf("ghcr.io/%s/%s:%s", username, packageName, versionTag)
+	packageURL := fmt.Sprintf("ghcr.io/%s/%s:%s", ghUser, packageName, versionTag)
 
 	slog.Info("Fetching image metadata...")
 
@@ -99,6 +86,38 @@ func main() {
 		os.Exit(1)
 	}
 
+	imgTagged := false
+	taggedVersions := ""
+
+	for _, image := range manifestList.Manifests {
+		url := fmt.Sprintf("ghcr.io/%s/%s@%s", ghUser, packageName, image.Digest)
+
+		if image.Platform.Architecture == "unknown" {
+			refArch, refOs := findMatchingDigest(image.Annotations["vnd.docker.reference.digest"], manifestList)
+			newTag := fmt.Sprintf("%s-attestation-manifest-%s-%s", versionTag, refOs, refArch)
+			newUrl := fmt.Sprintf("ghcr.io/%s/%s:%s", ghUser, packageName, newTag)
+
+			slog.Info("Tagging version...", "Version", image.Digest)
+			if !dryrun {
+				crane.Copy(url, newUrl, crane.WithAuth(auth))
+			}
+
+			imgTagged = true
+			taggedVersions += fmt.Sprintf("| %s | %s |\n", image.Digest, newTag)
+			continue
+		}
+
+		newTag := fmt.Sprintf("%s-%s-%s", versionTag, image.Platform.OS, image.Platform.Architecture)
+		newUrl := fmt.Sprintf("ghcr.io/%s/%s:%s", ghUser, packageName, newTag)
+
+		slog.Info("Tagging version...", "Version", image.Digest)
+		if !dryrun {
+			crane.Copy(url, newUrl, crane.WithAuth(auth))
+		}
+		imgTagged = true
+		taggedVersions += fmt.Sprintf("| %s | %s |\n", image.Digest, newTag)
+	}
+
 	// Append to GitHub summary
 	summaryFile := os.Getenv("GITHUB_STEP_SUMMARY")
 	f, err := os.OpenFile(summaryFile, os.O_APPEND|os.O_WRONLY, 0644)
@@ -107,18 +126,15 @@ func main() {
 	}
 	defer f.Close()
 
-	imgTagged := false
-	taggedVersions := ""
-
 	if imgTagged {
 		if dryrun {
 			f.WriteString(":warning: This is a dry run, no versions were actually tagged.\n\n")
 		}
 
-		f.WriteString("## Pruned Cosign Signatures\n\n")
-		f.WriteString("| Tags |\n|--------------|\n")
+		f.WriteString("## Tagged versions\n\n")
+		f.WriteString("| Digest | New Tag |\n|--------------|\n")
 		f.WriteString(taggedVersions + "\n")
 	} else {
-		f.WriteString("No orphaned signatures found.")
+		f.WriteString("No versions to tag found.")
 	}
 }

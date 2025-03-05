@@ -1,9 +1,9 @@
 name: tag-multiarch-images
-description: Prune orphaned cosign signatures from ghcr
+description: Tag multi architecture images from ghcr
 author: JTaeuber
 branding:
-  icon: "trash-2"
-  color: "green"
+  icon: "tag"
+  color: "blue"
 inputs:
   gh_token:
     description: "token for github to run the action with"

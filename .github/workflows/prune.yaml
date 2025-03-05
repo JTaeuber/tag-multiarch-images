@@ -18,6 +18,8 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           container: prune-orphaned-cosign-sig
+          keep-younger-than: 7 # days
+          keep-last: 5
           prune-untagged: true
           prune-tags-regexes: |
             ^test-
