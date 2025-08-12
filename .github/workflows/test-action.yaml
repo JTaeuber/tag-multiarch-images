@@ -15,7 +15,7 @@ jobs:
       tag: ${{ steps.set-tag.outputs.TAG }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set tag
         id: set-tag
@@ -63,7 +63,7 @@ jobs:
     needs: create_images
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Run Action
         uses: ./
